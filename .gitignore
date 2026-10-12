@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Environment Variables
+.env.local
+.env
+
+# Foundry
+cache/
+broadcast/
+out/
+
+# Misc
+.DS_Store
