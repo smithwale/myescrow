@@ -1,4 +1,5 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { http } from "wagmi"; // <--- ADD THIS
 import { mainnet } from "wagmi/chains";
 
 // Fetch the project ID from environment variables.
@@ -19,5 +20,8 @@ export const config = getDefaultConfig({
   appName: "SecureEscrow",
   projectId: walletConnectProjectId,
   chains: [mainnet],
+  transports: { // <--- ADD THIS ENTIRE BLOCK
+    [mainnet.id]: http('https://eth-mainnet.g.alchemy.com/v2/alch_rFp0ammisNNtNTQS7gCDH'),
+  },
   ssr: true,
 });
