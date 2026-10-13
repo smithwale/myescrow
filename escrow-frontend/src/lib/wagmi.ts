@@ -1,11 +1,11 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
-import { foundry, sepolia } from "wagmi/chains";
+import { mainnet } from "wagmi/chains";
 
 // Fetch the project ID from environment variables.
 // Users running this demo locally should create their own Project ID at cloud.reown.com
 // and define NEXT_PUBLIC_WC_PROJECT_ID in their .env.local file.
 const walletConnectProjectId =
-  process.env.NEXT_PUBLIC_WC_PROJECT_ID || "3fcc6b596dfcae73b522d40d39b322f5";
+  process.env.NEXT_PUBLIC_WC_PROJECT_ID || "fb56fb90c391038f9a2ffbce64d9268d";
 
 if (!process.env.NEXT_PUBLIC_WC_PROJECT_ID) {
   console.warn(
@@ -18,6 +18,6 @@ if (!process.env.NEXT_PUBLIC_WC_PROJECT_ID) {
 export const config = getDefaultConfig({
   appName: "SecureEscrow",
   projectId: walletConnectProjectId,
-  chains: [foundry, sepolia],
+  chains: [mainnet],
   ssr: true,
 });
