@@ -28,7 +28,7 @@ export const Navbar = () => {
       <nav className="bg-slate-950/60 border-b border-slate-800/80 backdrop-blur-md text-white py-4 px-6 sticky top-0 z-50">
         <div className="container mx-auto flex justify-between items-center">
           <Link href="/" className="text-2xl font-bold tracking-wide">
-            SecureEscrow
+            PaygigEscrow
           </Link>
           <div className="h-10 w-32 bg-slate-800 animate-pulse rounded-xl" />
         </div>
@@ -40,7 +40,7 @@ export const Navbar = () => {
     <nav className="bg-slate-950/60 border-b border-slate-800/80 backdrop-blur-md text-white py-4 px-6 sticky top-0 z-50">
       <div className="container mx-auto flex justify-between items-center">
         <Link href="/" className="text-2xl font-bold tracking-wide hover:text-slate-300 transition">
-          SecureEscrow
+          Paygig
         </Link>
         <div className="flex items-center space-x-4">
           {isAdmin && (

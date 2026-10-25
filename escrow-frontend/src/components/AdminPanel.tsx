@@ -76,6 +76,16 @@ export const AdminPanel: React.FC = () => {
         address: CONTRACT_ADDRESS as `0x${string}`,
         args: [BigInt(escrowId), winner as `0x${string}`],
       });
+      // 2. Tell Discord the Admin has made a decision!
+      await fetch('/api/notify-bot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'settled', 
+          escrowId: escrowId.toString(), 
+          winnerWallet: winner // We pass the winner's address!
+        }),
+      });
       toast.success(`Dispute for escrow #${escrowId} settled successfully!`, {
         id: toastId,
       });

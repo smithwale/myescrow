@@ -12,6 +12,7 @@ contract Escrow {
     }
 
     address public admin;
+    uint256 public platformFeePercent = 2; // Default 2% fee
     mapping(uint256 => EscrowDetail) public escrows;
     uint256 public escrowCount;
 
@@ -28,7 +29,13 @@ contract Escrow {
     }
 
     constructor() {
-        admin = msg.sender;
+    admin = msg.sender;
+    }
+
+    // Add this new function to update the fee safely
+    function setFee(uint256 _newFee) external onlyAdmin {
+        require(_newFee <= 10, "Fee cannot exceed 10%"); // Safety cap
+        platformFeePercent = _newFee;
     }
 
     function createEscrow(address payable _seller) external payable returns (uint256) {
@@ -38,7 +45,7 @@ contract Escrow {
             buyer: payable(msg.sender),
             seller: _seller,
             amount: msg.value,
-            status: Status.Created
+            status: Status.Funded
         });
 
         emit EscrowCreated(escrowCount, msg.sender, _seller, msg.value);
@@ -68,26 +75,54 @@ contract Escrow {
         require(escrow.status == Status.ServiceRendered, "Escrow is not in ServiceRendered status");
         require(msg.sender == escrow.buyer, "Only buyer can release funds");
 
-        escrow.seller.transfer(escrow.amount);
+       // Calculate fee and the remaining amount for the seller
+        uint256 feeAmount = (escrow.amount * platformFeePercent) / 100;
+        uint256 sellerAmount = escrow.amount - feeAmount;
+
+        // Transfer funds safely using .call
+        (bool feeSuccess, ) = payable(admin).call{value: feeAmount}("");
+        require(feeSuccess, "Fee transfer failed");
+
+        (bool sellerSuccess, ) = escrow.seller.call{value: sellerAmount}("");
+        require(sellerSuccess, "Seller transfer failed");
+
         escrow.status = Status.Completed;
         emit EscrowCompleted(_escrowId);
     }
 
     function openDispute(uint256 _escrowId) external {
         EscrowDetail storage escrow = escrows[_escrowId];
-        require(escrow.status == Status.ServiceRendered, "Escrow is not in ServiceRendered status");
-        require(msg.sender == escrow.buyer || msg.sender == escrow.seller, "Only buyer or seller can open dispute");
-
+        
+        // ✅ FIX: Buyer can dispute if it's Funded OR ServiceRendered. 
+        // Seller can only dispute if it's ServiceRendered.
+        if (msg.sender == escrow.buyer) {
+            require(escrow.status == Status.Funded || escrow.status == Status.ServiceRendered, "Invalid status for buyer dispute");
+        } else if (msg.sender == escrow.seller) {
+            require(escrow.status == Status.ServiceRendered, "Invalid status for seller dispute");
+        } else {
+            revert("Only buyer or seller can open dispute");
+        }
+        
         escrow.status = Status.Disputed;
         emit EscrowDisputed(_escrowId);
-    }
+}
 
     function settleDispute(uint256 _escrowId, address payable _winner) external onlyAdmin {
         EscrowDetail storage escrow = escrows[_escrowId];
         require(escrow.status == Status.Disputed, "Escrow is not in Disputed status");
 
-        _winner.transfer(escrow.amount);
+        // Calculate fee and the remaining amount for the winner
+            uint256 feeAmount = (escrow.amount * platformFeePercent) / 100;
+            uint256 winnerAmount = escrow.amount - feeAmount;
+
+        // Transfer funds safely using .call
+            (bool feeSuccess, ) = payable(admin).call{value: feeAmount}("");
+            require(feeSuccess, "Fee transfer failed");
+
+            (bool winnerSuccess, ) = _winner.call{value: winnerAmount}("");
+            require(winnerSuccess, "Winner transfer failed");
+
         escrow.status = Status.Completed;
         emit EscrowSettled(_escrowId, _winner);
-    }
+    }   
 }

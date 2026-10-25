@@ -1,5 +1,5 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
-import { http } from "wagmi"; // <--- ADD THIS
+import { http, createStorage } from "wagmi";
 import { mainnet } from "wagmi/chains";
 
 // Fetch the project ID from environment variables.
@@ -17,11 +17,15 @@ if (!process.env.NEXT_PUBLIC_WC_PROJECT_ID) {
 }
 
 export const config = getDefaultConfig({
-  appName: "SecureEscrow",
+  appName: "PayGig",
   projectId: walletConnectProjectId,
   chains: [mainnet],
   transports: { // <--- ADD THIS ENTIRE BLOCK
     [mainnet.id]: http('https://eth-mainnet.g.alchemy.com/v2/alch_rFp0ammisNNtNTQS7gCDH'),
   },
+   // Only use localStorage if we are in the browser
+  storage: createStorage({
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+  }),
   ssr: true,
 });
