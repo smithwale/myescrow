@@ -10,7 +10,8 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     console.log("EXACT ACTION RECEIVED:", body.action); // <--- ADD THIS
-    const { escrowId, buyerWallet, sellerWallet, amount, action, winnerWallet } = body;
+    const { escrowId, buyerWallet, sellerWallet, amount, winnerWallet } = body;
+    const action = body.action?.toLowerCase();
 
     const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
     if (!webhookUrl) return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
