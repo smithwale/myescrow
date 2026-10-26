@@ -5,7 +5,7 @@ const redis = new Redis({
   url: process.env.KV_REST_API_URL as string,
   token: process.env.KV_REST_API_TOKEN as string,
 });
-
+const botServerUrl = process.env.DISCORD_BOT_SERVER_URL || 'http://localhost:3001';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -25,14 +25,14 @@ export async function POST(request: Request) {
     }
 
     // SECURE LOOKUP
-    let discordTag = buyerWallet;
-    if (buyerWallet) {
-      console.log("3. LOOKING UP WALLET IN REDIS...");
-      const linkedDiscordId = await redis.get(`wallet:${buyerWallet.toLowerCase()}`);
-      console.log("4. REDIS LOOKUP RESULT:", linkedDiscordId);
+    let discordTag = buyerWallet; 
+    let linkedDiscordId = null; // <--- DECLARE IT HERE
 
+    if (buyerWallet) {
+      linkedDiscordId = await redis.get(`wallet:${buyerWallet.toLowerCase()}`); // <--- ASSIGN IT HERE
+      
       if (linkedDiscordId) {
-        discordTag = `<@${linkedDiscordId}>`;
+        discordTag = `<@${linkedDiscordId}>`; 
       }
     }
 
@@ -61,6 +61,25 @@ export async function POST(request: Request) {
     }
 
     console.log("5. FINAL MESSAGE TO SEND:", message);
+
+
+        // 🚨 TRIGGER THE DM
+    // Only send DMs for specific actions to avoid spamming
+    if (['funded', 'rendered', 'released'].includes(action)) {
+      try {
+        await fetch(`${botServerUrl}/send-dm`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            discordId: linkedDiscordId, // The person who triggered it
+            message: message, // Reuse the same formatted message
+            fallbackChannelId: process.env.DISCORD_CHANNEL_ID
+          })
+        });
+      } catch (err) {
+        console.log("Failed to reach DM server, continuing to webhook...", err);
+      }
+    }
 
     // Send to Discord
     const discordResponse = await fetch(webhookUrl, {
