@@ -65,66 +65,84 @@ const EscrowPage = () => {
   const isPending = isFunding || isRendering || isReleasing || isDisputing;
 
   const handleAction = async (action: string) => {
-    if (!id) return;
-    const toastId = toast.loading(`${action} in progress...`);
+  if (!id) return;
+  const toastId = toast.loading(`${action} in progress...`);
 
-    try {
-      if (action === "fund") {
-        await fundEscrow({ address: CONTRACT_ADDRESS as `0x${string}`, args: [escrowId] });
-        await fetch('/api/notify-bot', {
+  try {
+    if (action === "fund") {
+      await fundEscrow({ 
+        address: CONTRACT_ADDRESS as `0x${string}`, 
+        args: [escrowId] 
+      });
+      
+      await fetch('/api/notify-bot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           action: 'funded', 
           escrowId: escrowId.toString(), 
-          buyerWallet: account, // <--- THIS WAS MISSING!
+          buyerWallet: account, // <--- ADDED
           amount: escrowData?.[2] ? formatEther(escrowData[2]) : "Unknown" 
         }),
-       });
-      } 
-      
-      else if (action === "renderService") {
-        // 1. Send the transaction
-        await renderService({ address: CONTRACT_ADDRESS as `0x${string}`, args: [escrowId] });
+      });
+    } 
+    else if (action === "renderService") {
+      await renderService({ 
+        address: CONTRACT_ADDRESS as `0x${string}`, 
+        args: [escrowId] 
+      });
 
-        // 2. Tell Discord it was rendered!
-        await fetch('/api/notify-bot', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            action: 'rendered', 
-            escrowId: escrowId.toString()
-          }),
-        });
-      }
+      await fetch('/api/notify-bot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'rendered', 
+          escrowId: escrowId.toString(),
+          buyerWallet: account // <--- ADDED
+        }),
+      });
+    } 
+    else if (action === "releaseFunds") {
+      await releaseFunds({ 
+        address: CONTRACT_ADDRESS as `0x${string}`, 
+        args: [escrowId] 
+      });
 
+      await fetch('/api/notify-bot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'released', 
+          escrowId: escrowId.toString(), 
+          buyerWallet: account, // <--- ADDED
+          amount: escrowData?.[2] ? formatEther(escrowData[2]) : "Unknown" 
+        }),
+      });
+    } 
+    else if (action === "openDispute") {
+      await openDispute({ 
+        address: CONTRACT_ADDRESS as `0x${string}`, 
+        args: [escrowId] 
+      });
 
-      else if (action === "releaseFunds") {
-      // 1. Send the transaction
-        await releaseFunds({ address: CONTRACT_ADDRESS as `0x${string}`, args: [escrowId] });
-
-        // 2. Tell Discord it was released!
-        await fetch('/api/notify-bot', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            action: 'released', 
-            escrowId: escrowId.toString(), 
-            amount: escrowData?.[2] ? formatEther(escrowData[2]) : "Unknown" 
-          }),
-        });
-      }
-      else if (action === "openDispute") {
-        await openDispute({ address: CONTRACT_ADDRESS as `0x${string}`, args: [escrowId] });
-      }
-
-      toast.success(`${action} transaction sent!`, { id: toastId });
-      refetchEscrow();
-    } catch (error: any) {
-      console.error(error);
-      toast.error(`Error: ${error.message || "Transaction failed"}`, { id: toastId });
+      await fetch('/api/notify-bot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'disputed', 
+          escrowId: escrowId.toString(),
+          buyerWallet: account // <--- ADDED
+        }),
+      });
     }
-  };
+
+    toast.success(`${action} transaction sent!`, { id: toastId });
+    refetchEscrow();
+  } catch (error: any) {
+    console.error(error);
+    toast.error(`Error: ${error.message || "Transaction failed"}`, { id: toastId });
+  }
+};
 
   if (!mounted || isReading) return <div className="text-center py-12">Loading...</div>;
   if (!escrowData || escrowData[0] === "0x0000000000000000000000000000000000000000") return <div className="text-center py-12 text-red-500">Escrow not found</div>;
