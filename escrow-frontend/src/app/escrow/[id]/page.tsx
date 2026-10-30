@@ -203,6 +203,52 @@ const EscrowPage = () => {
         </div>
       </div>
 
+      
+  <div className="bg-slate-900/50 border border-slate-800 p-8 rounded-xl flex flex-col items-center justify-center text-center backdrop-blur-md w-full">
+  <h3 className="text-xl font-bold text-white mb-4">Escrow Status</h3>
+  
+  {status === "Created" && (
+    <>
+      <div className="text-4xl mb-4">⏳</div>
+      <p className="text-gray-400 mb-2">This escrow has been created but is not yet funded.</p>
+      <p className="text-gray-400">Click <strong>Fund Escrow</strong> above to lock the funds into the smart contract.</p>
+    </>
+  )}
+
+  {status === "Funded" && (
+    <>
+      <div className="text-4xl mb-4">🔒</div>
+      <p className="text-gray-400 mb-2">Funds are securely locked in the smart contract!</p>
+      <p className="text-gray-400">The Seller can now complete the work and click <strong>Mark as Delivered</strong>.</p>
+    </>
+  )}
+
+  {status === "ServiceRendered" && (
+    <>
+      <div className="text-4xl mb-4">📦</div>
+      <p className="text-gray-400 mb-2">The Seller has marked this item as delivered.</p>
+      <p className="text-gray-400">The Buyer should review the work and click <strong>Release Funds</strong>.</p>
+    </>
+  )}
+
+  {status === "Completed" && (
+    <>
+      <div className="text-4xl mb-4">🎉</div>
+      <p className="text-green-400 font-bold mb-2">Escrow Completed!</p>
+      <p className="text-gray-400">The funds have been successfully released.</p>
+    </>
+  )}
+
+  {status === "Disputed" && (
+    <>
+      <div className="text-4xl mb-4">⚠️</div>
+      <p className="text-red-400 font-bold mb-2">Dispute Opened</p>
+      <p className="text-gray-400">The funds are frozen. The Admin will review this escrow and decide where the funds go.</p>
+    </>
+  )}
+</div>
+{/* 👆 END OF STATUS CARD 👆 */}
+
       <EscrowChat 
         escrowId={Number(escrowId)} 
         buyer={buyer} 
